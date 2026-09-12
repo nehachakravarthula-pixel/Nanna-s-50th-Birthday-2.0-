@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nanna — Private Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#24324a;--navy2:#35435c;--ivory:#fbf6ee;--cream:#fffaf3;--gold:#c79552;--ink:#2f3540;--muted:#77736e;--line:#e6d9cb;--danger:#9b4d45}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:"DM Sans",system-ui,sans-serif;color:var(--ink);background:var(--ivory)}body{overflow-x:hidden}
+.top{height:70px;background:rgba(36,50,74,.98);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,5vw,70px);box-shadow:0 8px 25px rgba(20,28,42,.12)}
+.brand{font-family:Georgia,"Times New Roman",serif;font-size:20px;letter-spacing:.01em}.top-right{display:flex;gap:10px;align-items:center}.pill{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#ead7bd;border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:8px 11px}
+main{width:min(1160px,100%);margin:0 auto;padding:48px 22px 70px}.hero{display:flex;justify-content:space-between;gap:25px;align-items:end;margin-bottom:30px}.eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#8b6a39;font-weight:700;margin-bottom:9px}.hero h1{font:600 clamp(38px,5vw,62px)/.98 Georgia,"Times New Roman",serif;color:var(--navy);margin:0}.hero p{color:var(--muted);margin:12px 0 0;line-height:1.6}.btn{border:0;border-radius:999px;padding:12px 18px;font:600 14px system-ui,sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.btn.secondary{background:#fff;border:1px solid var(--line);color:var(--navy)}.btn.danger{background:#fff5f3;color:var(--danger);border:1px solid #e8c8c3}.btn:hover{transform:translateY(-1px)}
+.panel{background:rgba(255,250,243,.92);border:1px solid var(--line);border-radius:24px;box-shadow:0 18px 50px rgba(70,55,43,.1);padding:25px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}.panel-head h2{font:600 25px Georgia,"Times New Roman",serif;color:var(--navy);margin:0}.count{font-size:13px;color:var(--muted);background:#f3eadf;border-radius:999px;padding:7px 11px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{background:#fffdf9;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 8px 24px rgba(65,50,40,.06)}.card-top{display:flex;justify-content:space-between;gap:15px;align-items:start}.name{font-weight:700;color:var(--navy);font-size:15px}.date{font-size:11px;color:#8b8680;margin-top:4px}.msg{font:18px/1.55 Georgia,"Times New Roman",serif;margin:17px 0;color:#383a40;white-space:pre-wrap;overflow-wrap:anywhere}.photo{width:100%;height:210px;object-fit:cover;border-radius:13px;margin-top:4px;border:1px solid #eadfd4}.empty{text-align:center;padding:70px 20px;color:var(--muted)}
+#login{min-height:100vh;display:grid;place-items:center;padding:25px;background:radial-gradient(circle at 50% 5%,#5b6b82 0,#35435c 42%,#24324a 100%)}.login-card{width:min(450px,100%);background:var(--cream);border:1px solid rgba(255,255,255,.55);border-radius:26px;padding:35px;box-shadow:0 25px 70px rgba(0,0,0,.25)}.login-mark{text-align:center;color:#8b6a39;letter-spacing:.22em;text-transform:uppercase;font-size:11px;font-weight:700}.login-card h1{text-align:center;font:600 42px Georgia,"Times New Roman",serif;color:var(--navy);margin:10px 0}.login-card p{text-align:center;color:var(--muted);line-height:1.6;margin:0 0 27px}.field{margin-bottom:16px}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:7px;color:var(--navy)}.field input{width:100%;padding:14px;border:1px solid #decfc2;border-radius:12px;background:#fff;font:inherit;outline:none}.field input:focus{border-color:#a0834b;box-shadow:0 0 0 3px rgba(160,131,75,.12)}.login-btn{width:100%;background:var(--navy);color:#fff;padding:14px;border-radius:12px;border:0;font-weight:700;font-size:14px;cursor:pointer}.status{min-height:20px;text-align:center;margin-top:13px;color:var(--danger);font-size:13px}.back{text-align:center;margin-top:19px}.back a{color:var(--navy);font-size:13px;text-decoration:none;font-weight:600}
+@media(max-width:720px){.top{height:auto;min-height:66px;padding:12px 15px}.pill{display:none}main{padding:32px 14px 50px}.hero{display:block}.hero .btn{margin-top:20px}.grid{grid-template-columns:1fr}.panel{padding:17px}.panel-head h2{font-size:22px}.card{padding:17px}.photo{height:190px}.login-card{padding:28px 20px}.login-card h1{font-size:36px}}
+</style>
+</head>
+<body>
+<section id="login">
+  <div class="login-card">
+    <div class="login-mark">Private • Nanna's 50th</div>
+    <h1>Admin</h1>
+    <p>This private page is for the person managing the birthday messages.</p>
+    <form id="loginForm">
+      <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+      <button class="login-btn" type="submit">Sign in securely</button>
+      <div class="status" id="loginStatus"></div>
+    </form>
+    <div class="back"><a href="../index.html">← Back to birthday site</a></div>
+  </div>
+</section>
+<section id="app" hidden>
+  <header class="top"><div class="brand">50 Years of You</div><div class="top-right"><span class="pill">Private Admin</span><button class="btn secondary" id="signOut">Sign out</button></div></header>
+  <main>
+    <div class="hero"><div><div class="eyebrow">The message room</div><h1>Messages for Nanna</h1><p>Review the wishes people have left. Deleting a message removes it from the shared wall.</p></div><a class="btn secondary" href="../messages.html">View public wall</a></div>
+    <section class="panel"><div class="panel-head"><h2>All messages</h2><span class="count" id="count">0 messages</span></div><div class="grid" id="grid"><div class="empty">Loading messages…</div></div></section>
+  </main>
+</section>
+<script>
+const SUPABASE_URL="https://yhgmtvcaptgvmqnczeuc.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_DUCqevIEFnRrJL4UuwiUoQ_wRYgIYD0";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const $=id=>document.getElementById(id);
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function fmt(d){try{return new Intl.DateTimeFormat('en-IN',{dateStyle:'medium',timeStyle:'short'}).format(new Date(d))}catch{return ''}}
+function showLogin(msg=''){$('login').hidden=false;$('app').hidden=true;$('loginStatus').textContent=msg}
+async function verifyAdmin(user){
+  const {data,error}=await sb.from('admins').select('user_id').eq('user_id',user.id).maybeSingle();
+  if(error||!data){await sb.auth.signOut();showLogin(error?'Could not verify admin access: '+error.message:'This account is not an approved admin account.');return false}
+  $('login').hidden=true;$('app').hidden=false;$('loginStatus').textContent='';await loadMessages();return true;
+}
+async function loadMessages(){
+  const {data,error}=await sb.from('messages').select('*').order('created_at',{ascending:false});
+  if(error){$('grid').innerHTML='<div class="empty">Could not load messages: '+esc(error.message)+'</div>';return}
+  $('count').textContent=`${data.length} message${data.length===1?'':'s'}`;
+  if(!data.length){$('grid').innerHTML='<div class="empty">No messages yet.</div>';return}
+  $('grid').innerHTML=data.map(m=>`<article class="card"><div class="card-top"><div><div class="name">${esc(m.name)}</div><div class="date">${fmt(m.created_at)}</div></div><button class="btn danger" data-id="${esc(m.id)}">Delete</button></div>${m.photo_url?`<img class="photo" src="${esc(m.photo_url)}" alt="Attached birthday photo">`:''}<div class="msg">${esc(m.message)}</div></article>`).join('');
+  document.querySelectorAll('[data-id]').forEach(b=>b.addEventListener('click',()=>deleteMessage(b.dataset.id)));
+}
+async function deleteMessage(id){
+  if(!confirm('Delete this message from the birthday wall? This cannot be undone.'))return;
+  const {error}=await sb.from('messages').delete().eq('id',id);
+  if(error){alert('Could not delete this message. '+error.message);return}
+  await loadMessages();
+}
+$('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  $('loginStatus').textContent='Signing in…';
+  const {data,error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+  if(error){$('loginStatus').textContent=error.message;return}
+  await verifyAdmin(data.user);
+});
+$('signOut').addEventListener('click',async()=>{await sb.auth.signOut();$('email').value='';$('password').value='';showLogin('You have been signed out.')});
+(async()=>{const {data:{session}}=await sb.auth.getSession();if(session)await verifyAdmin(session.user)})();
+</script>
+</body></html>
