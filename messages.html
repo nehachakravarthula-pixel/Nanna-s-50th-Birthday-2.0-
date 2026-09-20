@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Messages · 50 Years of You</title>
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -22,7 +21,9 @@
   --white:#fff
 }
 
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box
+}
 
 html,body{
   margin:0;
@@ -32,7 +33,11 @@ html,body{
   background:var(--ivory)
 }
 
-body{overflow-x:hidden}
+body{
+  overflow-x:hidden
+}
+
+/* NAVIGATION */
 
 nav{
   height:68px;
@@ -64,16 +69,20 @@ nav{
   color:#f0cfae
 }
 
+/* PAGE */
+
 .messages-page{
   min-height:calc(100vh - 68px);
   background:#efe3d5;
-  padding:42px 5vw 60px;
+  padding:42px 5vw 60px
 }
 
 .messages-inner{
   width:min(1150px,100%);
   margin:auto
 }
+
+/* HEADER */
 
 .section-head{
   text-align:center;
@@ -105,11 +114,15 @@ nav{
   line-height:1.6
 }
 
+/* MESSAGE WALL */
+
 .message-wall{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:20px
 }
+
+/* MESSAGE CARD */
 
 .card{
   background:var(--cream);
@@ -119,12 +132,11 @@ nav{
   border-radius:18px;
   min-height:175px;
   box-shadow:0 12px 30px rgba(88,65,52,.12);
-  cursor:pointer;
-  transition:.2s
+  transition:transform .2s,box-shadow .2s
 }
 
 .card:hover{
-  transform:translateY(-5px) rotate(0)
+  transform:translateY(-5px)
 }
 
 .card:nth-child(3n+1){
@@ -139,6 +151,14 @@ nav{
   transform:rotate(-.5deg)
 }
 
+.card:nth-child(3n+1):hover,
+.card:nth-child(3n+2):hover,
+.card:nth-child(3n):hover{
+  transform:translateY(-5px) rotate(0)
+}
+
+/* PHOTO */
+
 .card img{
   width:100%;
   height:125px;
@@ -148,38 +168,49 @@ nav{
   display:block
 }
 
+/* MESSAGE TEXT */
+
 .msg{
   font-family:Georgia,serif;
   font-size:19px;
-  line-height:1.5
+  line-height:1.5;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere
 }
 
-/* =========================
-   LONG MESSAGE PREVIEW
-========================= */
+/*
+  Long messages are visually shortened.
+  The full text is still stored in the card.
+*/
 
-.msg-preview{
+.msg.message-preview{
   display:-webkit-box;
   -webkit-box-orient:vertical;
   -webkit-line-clamp:4;
-  overflow:hidden;
+  overflow:hidden
 }
+
+/* READ MORE */
 
 .read-more{
   display:inline-block;
   margin-top:10px;
   padding:0;
   border:0;
-  background:none;
-  color:#a0834b;
-  font:600 13px Arial,sans-serif;
+  background:transparent;
+  color:#24324a;
+  font-family:Arial,sans-serif;
+  font-size:13px;
+  font-weight:700;
   cursor:pointer;
-  text-decoration:underline;
+  text-decoration:underline
 }
 
 .read-more:hover{
-  color:#7d6338;
+  color:#c79552
 }
+
+/* NAME */
 
 .from{
   margin-top:16px;
@@ -188,12 +219,16 @@ nav{
   font-weight:600
 }
 
+/* EMPTY */
+
 .empty{
   text-align:center;
   color:#756f70;
   grid-column:1/-1;
   padding:40px
 }
+
+/* ERROR */
 
 .error{
   text-align:center;
@@ -203,6 +238,8 @@ nav{
   background:rgba(255,250,243,.6);
   border-radius:16px
 }
+
+/* MODAL */
 
 .modal{
   position:fixed;
@@ -240,8 +277,11 @@ nav{
   width:36px;
   height:36px;
   cursor:pointer;
-  font-size:20px
+  font-size:20px;
+  z-index:2
 }
+
+/* TABLET */
 
 @media(max-width:850px){
 
@@ -250,6 +290,8 @@ nav{
   }
 
 }
+
+/* PHONE */
 
 @media(max-width:600px){
 
@@ -301,6 +343,11 @@ nav{
     transform:none
   }
 
+  .card:hover,
+  .card:nth-child(n):hover{
+    transform:translateY(-3px)
+  }
+
   .card{
     padding:20px;
     min-height:150px
@@ -308,6 +355,10 @@ nav{
 
   .msg{
     font-size:18px
+  }
+
+  .read-more{
+    font-size:14px
   }
 
   .modal{
@@ -355,7 +406,7 @@ nav{
       </h1>
 
       <p>
-        Click any card to read the full message.
+        Click "Read more" to read longer messages.
       </p>
 
     </div>
@@ -374,11 +425,16 @@ nav{
 </main>
 
 
+<!-- FULL MESSAGE MODAL -->
+
 <div class="modal" id="viewModal">
 
   <div class="modal-box">
 
-    <button class="close" onclick="closeModal()">
+    <button
+      class="close"
+      onclick="closeModal()"
+      aria-label="Close">
       ×
     </button>
 
@@ -401,7 +457,7 @@ const SUPABASE_URL =
 const SUPABASE_ANON_KEY =
   "sb_publishable_DUCqevIEFnRrJL4UuwiUoQ_wRYgIYD0";
 
-let sb;
+let sb = null;
 
 
 /* =========================
@@ -424,12 +480,15 @@ function startSite(){
       return;
     }
 
-    sb = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY
-    );
+    sb =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
 
     loadMessages();
+
+    enableRealtime();
 
   }catch(error){
 
@@ -438,7 +497,9 @@ function startSite(){
     showError(
       "Could not connect to the message service."
     );
+
   }
+
 }
 
 
@@ -456,23 +517,34 @@ async function loadMessages(){
 
   try{
 
-    const result = await sb
+    const result =
+      await sb
       .from("messages")
       .select("*")
-      .order("created_at",{ascending:false});
+      .order(
+        "created_at",
+        {ascending:false}
+      );
 
-    const data = result.data;
-    const error = result.error;
+    const data =
+      result.data;
+
+    const error =
+      result.error;
 
     if(error){
 
-      console.error("Supabase error:",error);
+      console.error(
+        "Supabase error:",
+        error
+      );
 
       showError(
         "Could not load messages. Please refresh and try again."
       );
 
       return;
+
     }
 
     renderMessages(data || []);
@@ -484,7 +556,9 @@ async function loadMessages(){
     showError(
       "Something went wrong while loading the messages."
     );
+
   }
+
 }
 
 
@@ -503,82 +577,85 @@ function renderMessages(data){
       '<div class="empty">Be the first to leave a birthday wish.</div>';
 
     return;
+
   }
 
   wall.innerHTML = "";
+
 
   data.forEach(function(m){
 
     const card =
       document.createElement("article");
 
-    card.className = "card";
+    card.className =
+      "card";
 
-    /*
-      Clicking anywhere on the card
-      still opens the full message.
-    */
 
-    card.addEventListener(
-      "click",
-      function(){
-        openMessage(m);
-      }
-    );
-
+    /* PHOTO */
 
     if(m.photo_url){
 
       const img =
         document.createElement("img");
 
-      img.src = m.photo_url;
-      img.alt = "Birthday photo";
+      img.src =
+        m.photo_url;
+
+      img.alt =
+        "Birthday photo";
 
       card.appendChild(img);
+
     }
 
 
-    /*
-      LONG MESSAGE LOGIC
-
-      Messages over 220 characters
-      get the shortened preview + Read more.
-    */
-
-    const isLong =
-      String(m.message || "").length > 220;
-
+    /* MESSAGE */
 
     const message =
       document.createElement("div");
 
     message.className =
-      isLong ? "msg msg-preview" : "msg";
-
-    message.textContent =
-      m.message || "";
-
-    card.appendChild(message);
+      "msg";
 
 
-    if(isLong){
+    /*
+      Change this number if you want
+      Read more to appear earlier/later.
+    */
+
+    const LIMIT = 220;
+
+    const text =
+      String(m.message || "");
+
+
+    if(text.length > LIMIT){
+
+      message.classList.add(
+        "message-preview"
+      );
+
+      message.textContent =
+        text;
+
+      card.appendChild(message);
+
+
+      /* READ MORE BUTTON */
 
       const readMore =
         document.createElement("button");
 
-      readMore.className =
-        "read-more";
-
       readMore.type =
         "button";
+
+      readMore.className =
+        "read-more";
 
       readMore.textContent =
         "Read more";
 
-      /*
-        Prevent the card click from firing twice.
-      */
 
       readMore.addEventListener(
         "click",
@@ -591,24 +668,45 @@ function renderMessages(data){
         }
       );
 
-      card.appendChild(readMore);
+
+      card.appendChild(
+        readMore
+      );
+
+    }else{
+
+      message.textContent =
+        text;
+
+      card.appendChild(
+        message
+      );
+
     }
 
+
+    /* NAME */
 
     const from =
       document.createElement("div");
 
-    from.className = "from";
+    from.className =
+      "from";
 
     from.textContent =
       "— " + (m.name || "");
 
-    card.appendChild(from);
+    card.appendChild(
+      from
+    );
 
 
-    wall.appendChild(card);
+    wall.appendChild(
+      card
+    );
 
   });
+
 }
 
 
@@ -625,37 +723,57 @@ function showError(text){
     '<div class="error">' +
     escapeHtml(text) +
     '</div>';
+
 }
 
 
 /* =========================
-   OPEN MESSAGE
+   OPEN FULL MESSAGE
 ========================= */
 
 function openMessage(m){
 
   const content =
-    document.getElementById("viewContent");
+    document.getElementById(
+      "viewContent"
+    );
 
   content.innerHTML = "";
 
+
+  /* PHOTO */
 
   if(m.photo_url){
 
     const img =
       document.createElement("img");
 
-    img.src = m.photo_url;
+    img.src =
+      m.photo_url;
 
-    img.style.width = "100%";
-    img.style.maxHeight = "360px";
-    img.style.objectFit = "cover";
-    img.style.borderRadius = "14px";
-    img.style.marginBottom = "22px";
+    img.style.width =
+      "100%";
 
-    content.appendChild(img);
+    img.style.maxHeight =
+      "360px";
+
+    img.style.objectFit =
+      "cover";
+
+    img.style.borderRadius =
+      "14px";
+
+    img.style.marginBottom =
+      "22px";
+
+    content.appendChild(
+      img
+    );
+
   }
 
+
+  /* TITLE */
 
   const eyebrow =
     document.createElement("div");
@@ -669,8 +787,12 @@ function openMessage(m){
   eyebrow.textContent =
     "A birthday wish";
 
-  content.appendChild(eyebrow);
+  content.appendChild(
+    eyebrow
+  );
 
+
+  /* FULL MESSAGE */
 
   const message =
     document.createElement("div");
@@ -684,11 +806,18 @@ function openMessage(m){
   message.style.lineHeight =
     "1.5";
 
+  message.style.whiteSpace =
+    "pre-wrap";
+
   message.textContent =
     m.message;
 
-  content.appendChild(message);
+  content.appendChild(
+    message
+  );
 
+
+  /* NAME */
 
   const from =
     document.createElement("div");
@@ -700,14 +829,17 @@ function openMessage(m){
     "600";
 
   from.textContent =
-    "— " + m.name;
+    "— " + (m.name || "");
 
-  content.appendChild(from);
+  content.appendChild(
+    from
+  );
 
 
   document
     .getElementById("viewModal")
     .classList.add("show");
+
 }
 
 
@@ -720,6 +852,7 @@ function closeModal(){
   document
     .getElementById("viewModal")
     .classList.remove("show");
+
 }
 
 
@@ -735,20 +868,6 @@ function escapeHtml(value){
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
-}
-
-
-/* =========================
-   AUTO REFRESH
-========================= */
-
-async function refreshMessages(){
-
-  if(sb){
-
-    await loadMessages();
-
-  }
 
 }
 
@@ -777,6 +896,7 @@ function enableRealtime(){
       }
     )
     .subscribe();
+
 }
 
 
@@ -790,18 +910,12 @@ if(
 
   document.addEventListener(
     "DOMContentLoaded",
-    function(){
-
-      startSite();
-      enableRealtime();
-
-    }
+    startSite
   );
 
 }else{
 
   startSite();
-  enableRealtime();
 
 }
 
