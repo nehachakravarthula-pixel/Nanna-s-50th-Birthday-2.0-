@@ -154,6 +154,33 @@ nav{
   line-height:1.5
 }
 
+/* =========================
+   LONG MESSAGE PREVIEW
+========================= */
+
+.msg-preview{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:4;
+  overflow:hidden;
+}
+
+.read-more{
+  display:inline-block;
+  margin-top:10px;
+  padding:0;
+  border:0;
+  background:none;
+  color:#a0834b;
+  font:600 13px Arial,sans-serif;
+  cursor:pointer;
+  text-decoration:underline;
+}
+
+.read-more:hover{
+  color:#7d6338;
+}
+
 .from{
   margin-top:16px;
   color:#6d6b65;
@@ -217,9 +244,11 @@ nav{
 }
 
 @media(max-width:850px){
+
   .message-wall{
     grid-template-columns:repeat(2,1fr)
   }
+
 }
 
 @media(max-width:600px){
@@ -289,6 +318,7 @@ nav{
     max-height:92vh;
     padding:25px 18px
   }
+
 }
 </style>
 </head>
@@ -296,33 +326,47 @@ nav{
 <body>
 
 <nav>
-  <div class="brand">50 Years of You</div>
+
+  <div class="brand">
+    50 Years of You
+  </div>
 
   <div class="links">
     <a href="index.html">Home</a>
     <a href="write.html">Send a Message</a>
     <a href="messages.html">Messages</a>
   </div>
+
 </nav>
+
 
 <main class="messages-page">
 
   <div class="messages-inner">
 
     <div class="section-head">
-      <div class="eyebrow">From everyone who loves you</div>
 
-      <h1>Birthday Messages</h1>
+      <div class="eyebrow">
+        From everyone who loves you
+      </div>
+
+      <h1>
+        Birthday Messages
+      </h1>
 
       <p>
         Click any card to read the full message.
       </p>
+
     </div>
 
+
     <div class="message-wall" id="wall">
+
       <div class="empty">
         Loading messages…
       </div>
+
     </div>
 
   </div>
@@ -334,7 +378,9 @@ nav{
 
   <div class="modal-box">
 
-    <button class="close" onclick="closeModal()">×</button>
+    <button class="close" onclick="closeModal()">
+      ×
+    </button>
 
     <div id="viewContent"></div>
 
@@ -468,12 +514,18 @@ function renderMessages(data){
 
     card.className = "card";
 
+    /*
+      Clicking anywhere on the card
+      still opens the full message.
+    */
+
     card.addEventListener(
       "click",
       function(){
         openMessage(m);
       }
     );
+
 
     if(m.photo_url){
 
@@ -486,20 +538,70 @@ function renderMessages(data){
       card.appendChild(img);
     }
 
+
+    /*
+      LONG MESSAGE LOGIC
+
+      Messages over 220 characters
+      get the shortened preview + Read more.
+    */
+
+    const isLong =
+      String(m.message || "").length > 220;
+
+
     const message =
       document.createElement("div");
 
-    message.className = "msg";
-    message.textContent = m.message;
+    message.className =
+      isLong ? "msg msg-preview" : "msg";
+
+    message.textContent =
+      m.message || "";
 
     card.appendChild(message);
+
+
+    if(isLong){
+
+      const readMore =
+        document.createElement("button");
+
+      readMore.className =
+        "read-more";
+
+      readMore.type =
+        "button";
+
+      readMore.textContent =
+        "Read more";
+
+      /*
+        Prevent the card click from firing twice.
+      */
+
+      readMore.addEventListener(
+        "click",
+        function(event){
+
+          event.stopPropagation();
+
+          openMessage(m);
+
+        }
+      );
+
+      card.appendChild(readMore);
+    }
 
 
     const from =
       document.createElement("div");
 
     from.className = "from";
-    from.textContent = "— " + m.name;
+
+    from.textContent =
+      "— " + (m.name || "");
 
     card.appendChild(from);
 
@@ -558,9 +660,11 @@ function openMessage(m){
   const eyebrow =
     document.createElement("div");
 
-  eyebrow.className = "eyebrow";
+  eyebrow.className =
+    "eyebrow";
 
-  eyebrow.style.color = "#a0834b";
+  eyebrow.style.color =
+    "#a0834b";
 
   eyebrow.textContent =
     "A birthday wish";
