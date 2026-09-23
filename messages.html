@@ -43,11 +43,9 @@ nav{
   height:68px;
   background:rgba(36,50,74,.98);
   color:white;
-
   display:flex;
   align-items:center;
   justify-content:space-between;
-
   padding:0 clamp(20px,5vw,80px);
 }
 
@@ -155,9 +153,10 @@ nav{
     transform .2s ease,
     box-shadow .2s ease;
 
-  /* IMPORTANT */
-  pointer-events:auto;
   user-select:none;
+
+  /* Make the entire card one clickable surface */
+  -webkit-tap-highlight-color:transparent;
 }
 
 .card:hover{
@@ -169,13 +168,13 @@ nav{
   transform:scale(.985);
 }
 
-.card:focus{
+.card:focus-visible{
   outline:3px solid rgba(199,149,82,.45);
   outline-offset:3px;
 }
 
 
-/* little rotations */
+/* rotations */
 
 .card:nth-child(3n+1){
   transform:rotate(-1deg);
@@ -211,7 +210,11 @@ nav{
 
   display:block;
 
-  pointer-events:none;
+  /*
+    IMPORTANT:
+    The image is part of the clickable card.
+  */
+  cursor:pointer;
 }
 
 
@@ -224,11 +227,12 @@ nav{
   font-size:19px;
   line-height:1.5;
 
-  /* Keep cards neat */
   display:-webkit-box;
   -webkit-box-orient:vertical;
   -webkit-line-clamp:4;
   overflow:hidden;
+
+  cursor:pointer;
 }
 
 .from{
@@ -237,6 +241,8 @@ nav{
   color:#6d6b65;
   font-size:13px;
   font-weight:600;
+
+  cursor:pointer;
 }
 
 
@@ -247,22 +253,16 @@ nav{
 .empty{
   text-align:center;
   color:#756f70;
-
   grid-column:1/-1;
-
   padding:40px;
 }
 
 .error{
   text-align:center;
   color:#8b4d45;
-
   grid-column:1/-1;
-
   padding:30px;
-
   background:rgba(255,250,243,.6);
-
   border-radius:16px;
 }
 
@@ -334,6 +334,8 @@ nav{
   margin:0 auto 24px;
 
   background:#eee5da;
+
+  cursor:default;
 }
 
 
@@ -424,29 +426,21 @@ nav{
   nav{
     min-height:62px;
     height:auto;
-
     padding:10px 14px;
-
     gap:7px;
-
     flex-wrap:wrap;
-
     justify-content:center;
   }
 
   .brand{
     font-size:17px;
-
     width:100%;
-
     text-align:center;
   }
 
   .links{
     gap:8px 14px;
-
     flex-wrap:wrap;
-
     justify-content:center;
   }
 
@@ -496,9 +490,7 @@ nav{
 
   .modal-box{
     max-height:94vh;
-
     padding:26px 18px;
-
     border-radius:18px;
   }
 
@@ -512,10 +504,6 @@ nav{
 
 }
 
-
-/* =========================
-   VERY SMALL PHONES
-========================= */
 
 @media(max-width:360px){
 
@@ -539,11 +527,6 @@ nav{
 
 <body>
 
-
-<!-- =========================
-     NAV
-========================= -->
-
 <nav>
 
   <div class="brand">
@@ -552,27 +535,16 @@ nav{
 
   <div class="links">
 
-    <a href="index.html">
-      Home
-    </a>
+    <a href="index.html">Home</a>
 
-    <a href="write.html">
-      Send a Message
-    </a>
+    <a href="write.html">Send a Message</a>
 
-    <a href="messages.html">
-      Messages
-    </a>
+    <a href="messages.html">Messages</a>
 
   </div>
 
 </nav>
 
-
-
-<!-- =========================
-     MESSAGES
-========================= -->
 
 <main class="messages-page">
 
@@ -611,11 +583,6 @@ nav{
 </main>
 
 
-
-<!-- =========================
-     MESSAGE MODAL
-========================= -->
-
 <div
   class="modal"
   id="viewModal"
@@ -640,7 +607,6 @@ nav{
   </div>
 
 </div>
-
 
 
 <script>
@@ -687,7 +653,6 @@ function startSite(){
 
 
     loadMessages();
-
 
     enableRealtime();
 
@@ -796,12 +761,6 @@ function renderMessages(data){
 
     card.className = "card";
 
-
-    /*
-      IMPORTANT:
-      Make the WHOLE CARD clickable.
-    */
-
     card.setAttribute(
       "tabindex",
       "0"
@@ -820,42 +779,46 @@ function renderMessages(data){
 
 
     /*
-      CLICK
+      THE WHOLE CARD OPENS THE MESSAGE.
+      This includes:
+      - image
+      - message
+      - name
+      - empty space inside card
     */
 
-    card.addEventListener(
-      "click",
-      function(event){
+    card.onclick = function(event){
+
+      /*
+        Don't open when clicking the
+        close button or anything outside.
+      */
+
+      event.preventDefault();
+
+      openMessage(m);
+
+    };
+
+
+    /*
+      KEYBOARD SUPPORT
+    */
+
+    card.onkeydown = function(event){
+
+      if(
+        event.key === "Enter" ||
+        event.key === " "
+      ){
 
         event.preventDefault();
 
         openMessage(m);
 
       }
-    );
 
-
-    /*
-      KEYBOARD
-    */
-
-    card.addEventListener(
-      "keydown",
-      function(event){
-
-        if(
-          event.key === "Enter" ||
-          event.key === " "
-        ){
-
-          event.preventDefault();
-
-          openMessage(m);
-
-        }
-
-      }
-    );
+    };
 
 
     /*
@@ -867,29 +830,22 @@ function renderMessages(data){
       const img =
         document.createElement("img");
 
-
       img.src =
         m.photo_url;
 
-
       img.alt =
         "Birthday photo";
-
 
       img.loading =
         index < 6
           ? "eager"
           : "lazy";
 
-
       /*
-        Image itself doesn't intercept
-        the card click.
+        IMPORTANT:
+        Do NOT disable pointer events.
+        The image belongs to the card.
       */
-
-      img.style.pointerEvents =
-        "none";
-
 
       card.appendChild(img);
 
@@ -903,14 +859,11 @@ function renderMessages(data){
     const message =
       document.createElement("div");
 
-
     message.className =
       "msg";
 
-
     message.textContent =
       m.message || "";
-
 
     card.appendChild(message);
 
@@ -922,21 +875,14 @@ function renderMessages(data){
     const from =
       document.createElement("div");
 
-
     from.className =
       "from";
-
 
     from.textContent =
       "— " + (m.name || "Anonymous");
 
-
     card.appendChild(from);
 
-
-    /*
-      ADD TO PAGE
-    */
 
     wall.appendChild(card);
 
@@ -946,7 +892,7 @@ function renderMessages(data){
 
 
 /* =========================
-   OPEN FULL MESSAGE
+   OPEN MESSAGE
 ========================= */
 
 function openMessage(m){
@@ -954,14 +900,9 @@ function openMessage(m){
   const modal =
     document.getElementById("viewModal");
 
-
   const content =
     document.getElementById("viewContent");
 
-
-  /*
-    Clear previous message
-  */
 
   content.innerHTML = "";
 
@@ -975,26 +916,21 @@ function openMessage(m){
     const img =
       document.createElement("img");
 
-
     img.className =
       "modal-image";
-
 
     img.src =
       m.photo_url;
 
-
     img.alt =
       "Birthday photo";
 
-
     /*
-      contain = NEVER CROP
+      NEVER CROP THE ORIGINAL IMAGE
     */
 
     img.style.objectFit =
       "contain";
-
 
     content.appendChild(img);
 
@@ -1008,14 +944,11 @@ function openMessage(m){
   const eyebrow =
     document.createElement("div");
 
-
   eyebrow.className =
     "modal-eyebrow";
 
-
   eyebrow.textContent =
     "A birthday wish";
-
 
   content.appendChild(eyebrow);
 
@@ -1027,14 +960,11 @@ function openMessage(m){
   const message =
     document.createElement("div");
 
-
   message.className =
     "modal-message";
 
-
   message.textContent =
     m.message || "";
-
 
   content.appendChild(message);
 
@@ -1046,28 +976,20 @@ function openMessage(m){
   const from =
     document.createElement("div");
 
-
   from.className =
     "modal-from";
 
-
   from.textContent =
     "— " + (m.name || "Anonymous");
-
 
   content.appendChild(from);
 
 
   /*
-    SHOW MODAL
+    SHOW
   */
 
   modal.classList.add("show");
-
-
-  /*
-    Prevent page behind from scrolling
-  */
 
   document.body.style.overflow =
     "hidden";
@@ -1076,7 +998,7 @@ function openMessage(m){
 
 
 /* =========================
-   CLOSE MODAL
+   CLOSE
 ========================= */
 
 function closeModal(){
@@ -1084,7 +1006,6 @@ function closeModal(){
   document
     .getElementById("viewModal")
     .classList.remove("show");
-
 
   document.body.style.overflow =
     "";
@@ -1102,6 +1023,8 @@ document
     "click",
     function(event){
 
+      event.preventDefault();
+
       event.stopPropagation();
 
       closeModal();
@@ -1111,7 +1034,7 @@ document
 
 
 /* =========================
-   CLICK OUTSIDE MODAL
+   CLICK OUTSIDE
 ========================= */
 
 document
@@ -1134,16 +1057,14 @@ document
 
 
 /* =========================
-   ESC KEY
+   ESC
 ========================= */
 
 document.addEventListener(
   "keydown",
   function(event){
 
-    if(
-      event.key === "Escape"
-    ){
+    if(event.key === "Escape"){
 
       closeModal();
 
@@ -1161,7 +1082,6 @@ function showError(text){
 
   const wall =
     document.getElementById("wall");
-
 
   wall.innerHTML =
     '<div class="error">' +
@@ -1194,7 +1114,6 @@ function escapeHtml(value){
 function enableRealtime(){
 
   if(!sb) return;
-
 
   sb
     .channel("messages-live")
