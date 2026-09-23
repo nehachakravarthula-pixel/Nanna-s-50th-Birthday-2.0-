@@ -35,6 +35,7 @@ body{
   overflow-x:hidden;
 }
 
+
 /* =========================
    NAVIGATION
 ========================= */
@@ -153,10 +154,8 @@ nav{
     transform .2s ease,
     box-shadow .2s ease;
 
+  pointer-events:auto;
   user-select:none;
-
-  /* Make the entire card one clickable surface */
-  -webkit-tap-highlight-color:transparent;
 }
 
 .card:hover{
@@ -168,13 +167,15 @@ nav{
   transform:scale(.985);
 }
 
-.card:focus-visible{
+.card:focus{
   outline:3px solid rgba(199,149,82,.45);
   outline-offset:3px;
 }
 
 
-/* rotations */
+/* =========================
+   CARD ROTATIONS
+========================= */
 
 .card:nth-child(3n+1){
   transform:rotate(-1deg);
@@ -202,19 +203,26 @@ nav{
 .card img{
   width:100%;
   height:125px;
-
   object-fit:cover;
-
   border-radius:12px;
   margin-bottom:14px;
-
   display:block;
+  pointer-events:none;
+}
 
-  /*
-    IMPORTANT:
-    The image is part of the clickable card.
-  */
-  cursor:pointer;
+
+/* =========================
+   CARD VIDEO
+========================= */
+
+.card video{
+  width:100%;
+  height:125px;
+  object-fit:cover;
+  border-radius:12px;
+  margin-bottom:14px;
+  display:block;
+  background:#111;
 }
 
 
@@ -231,18 +239,13 @@ nav{
   -webkit-box-orient:vertical;
   -webkit-line-clamp:4;
   overflow:hidden;
-
-  cursor:pointer;
 }
 
 .from{
   margin-top:16px;
-
   color:#6d6b65;
   font-size:13px;
   font-weight:600;
-
-  cursor:pointer;
 }
 
 
@@ -322,7 +325,6 @@ nav{
 
 .modal-image{
   width:100%;
-
   max-height:65vh;
 
   object-fit:contain;
@@ -334,8 +336,24 @@ nav{
   margin:0 auto 24px;
 
   background:#eee5da;
+}
 
-  cursor:default;
+
+/* =========================
+   FULL VIDEO
+========================= */
+
+.modal-video{
+  width:100%;
+  max-height:65vh;
+
+  display:block;
+
+  border-radius:14px;
+
+  margin:0 auto 24px;
+
+  background:#111;
 }
 
 
@@ -409,7 +427,7 @@ nav{
 
 
 /* =========================
-   MOBILE
+   TABLET
 ========================= */
 
 @media(max-width:850px){
@@ -421,26 +439,38 @@ nav{
 }
 
 
+/* =========================
+   MOBILE
+========================= */
+
 @media(max-width:600px){
 
   nav{
     min-height:62px;
     height:auto;
+
     padding:10px 14px;
+
     gap:7px;
+
     flex-wrap:wrap;
+
     justify-content:center;
   }
 
   .brand{
     font-size:17px;
+
     width:100%;
+
     text-align:center;
   }
 
   .links{
     gap:8px 14px;
+
     flex-wrap:wrap;
+
     justify-content:center;
   }
 
@@ -484,17 +514,24 @@ nav{
     font-size:18px;
   }
 
+  .card video{
+    height:150px;
+  }
+
   .modal{
     padding:12px;
   }
 
   .modal-box{
     max-height:94vh;
+
     padding:26px 18px;
+
     border-radius:18px;
   }
 
-  .modal-image{
+  .modal-image,
+  .modal-video{
     max-height:55vh;
   }
 
@@ -504,6 +541,10 @@ nav{
 
 }
 
+
+/* =========================
+   VERY SMALL PHONES
+========================= */
 
 @media(max-width:360px){
 
@@ -527,6 +568,11 @@ nav{
 
 <body>
 
+
+<!-- =========================
+     NAVIGATION
+========================= -->
+
 <nav>
 
   <div class="brand">
@@ -535,16 +581,27 @@ nav{
 
   <div class="links">
 
-    <a href="index.html">Home</a>
+    <a href="index.html">
+      Home
+    </a>
 
-    <a href="write.html">Send a Message</a>
+    <a href="write.html">
+      Send a Message
+    </a>
 
-    <a href="messages.html">Messages</a>
+    <a href="messages.html">
+      Messages
+    </a>
 
   </div>
 
 </nav>
 
+
+
+<!-- =========================
+     MESSAGES PAGE
+========================= -->
 
 <main class="messages-page">
 
@@ -583,6 +640,11 @@ nav{
 </main>
 
 
+
+<!-- =========================
+     MESSAGE MODAL
+========================= -->
+
 <div
   class="modal"
   id="viewModal"
@@ -609,10 +671,11 @@ nav{
 </div>
 
 
+
 <script>
 
 /* =========================
-   SUPABASE
+   SUPABASE CONNECTION
 ========================= */
 
 const SUPABASE_URL =
@@ -730,6 +793,23 @@ async function loadMessages(){
 
 
 /* =========================
+   DETECT VIDEO
+========================= */
+
+function isVideoUrl(url){
+
+  if(!url){
+    return false;
+  }
+
+  return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(
+    String(url)
+  );
+
+}
+
+
+/* =========================
    RENDER MESSAGES
 ========================= */
 
@@ -759,7 +839,13 @@ function renderMessages(data){
       document.createElement("article");
 
 
-    card.className = "card";
+    card.className =
+      "card";
+
+
+    /*
+      Make the ENTIRE card clickable.
+    */
 
     card.setAttribute(
       "tabindex",
@@ -778,111 +864,198 @@ function renderMessages(data){
     );
 
 
-    /*
-      THE WHOLE CARD OPENS THE MESSAGE.
-      This includes:
-      - image
-      - message
-      - name
-      - empty space inside card
-    */
+    /* =========================
+       CARD CLICK
+    ========================= */
 
-    card.onclick = function(event){
-
-      /*
-        Don't open when clicking the
-        close button or anything outside.
-      */
-
-      event.preventDefault();
-
-      openMessage(m);
-
-    };
-
-
-    /*
-      KEYBOARD SUPPORT
-    */
-
-    card.onkeydown = function(event){
-
-      if(
-        event.key === "Enter" ||
-        event.key === " "
-      ){
+    card.addEventListener(
+      "click",
+      function(event){
 
         event.preventDefault();
 
         openMessage(m);
 
       }
+    );
 
-    };
+
+    /* =========================
+       KEYBOARD ACCESS
+    ========================= */
+
+    card.addEventListener(
+      "keydown",
+      function(event){
+
+        if(
+          event.key === "Enter" ||
+          event.key === " "
+        ){
+
+          event.preventDefault();
+
+          openMessage(m);
+
+        }
+
+      }
+    );
 
 
-    /*
-      IMAGE
-    */
+    /* =========================
+       MEDIA
+    ========================= */
 
     if(m.photo_url){
 
-      const img =
-        document.createElement("img");
+      const url =
+        String(m.photo_url);
 
-      img.src =
-        m.photo_url;
 
-      img.alt =
-        "Birthday photo";
+      if(isVideoUrl(url)){
 
-      img.loading =
-        index < 6
-          ? "eager"
-          : "lazy";
+        /*
+          VIDEO CARD
+        */
 
-      /*
-        IMPORTANT:
-        Do NOT disable pointer events.
-        The image belongs to the card.
-      */
+        const video =
+          document.createElement("video");
 
-      card.appendChild(img);
+
+        video.src =
+          url;
+
+
+        video.controls =
+          true;
+
+
+        video.playsInline =
+          true;
+
+
+        video.preload =
+          "metadata";
+
+
+        video.setAttribute(
+          "aria-label",
+          "Birthday video"
+        );
+
+
+        /*
+          IMPORTANT:
+          Clicking the video opens
+          the full message/video.
+        */
+
+        video.addEventListener(
+          "click",
+          function(event){
+
+            event.stopPropagation();
+
+            openMessage(m);
+
+          }
+        );
+
+
+        card.appendChild(video);
+
+
+      }else{
+
+        /*
+          NORMAL IMAGE CARD
+        */
+
+        const img =
+          document.createElement("img");
+
+
+        img.src =
+          url;
+
+
+        img.alt =
+          "Birthday photo";
+
+
+        img.loading =
+          index < 6
+            ? "eager"
+            : "lazy";
+
+
+        /*
+          Clicking image opens
+          full message/photo.
+        */
+
+        img.addEventListener(
+          "click",
+          function(event){
+
+            event.stopPropagation();
+
+            openMessage(m);
+
+          }
+        );
+
+
+        card.appendChild(img);
+
+      }
 
     }
 
 
-    /*
-      MESSAGE
-    */
+    /* =========================
+       MESSAGE TEXT
+    ========================= */
 
     const message =
       document.createElement("div");
 
+
     message.className =
       "msg";
+
 
     message.textContent =
       m.message || "";
 
+
     card.appendChild(message);
 
 
-    /*
-      NAME
-    */
+    /* =========================
+       SENDER
+    ========================= */
 
     const from =
       document.createElement("div");
 
+
     from.className =
       "from";
 
+
     from.textContent =
-      "— " + (m.name || "Anonymous");
+      "— " +
+      (m.name || "Anonymous");
+
 
     card.appendChild(from);
 
+
+    /* =========================
+       ADD CARD
+    ========================= */
 
     wall.appendChild(card);
 
@@ -892,7 +1065,7 @@ function renderMessages(data){
 
 
 /* =========================
-   OPEN MESSAGE
+   OPEN FULL MESSAGE
 ========================= */
 
 function openMessage(m){
@@ -900,96 +1073,166 @@ function openMessage(m){
   const modal =
     document.getElementById("viewModal");
 
+
   const content =
     document.getElementById("viewContent");
 
 
+  /*
+    Clear old content.
+  */
+
   content.innerHTML = "";
 
 
-  /*
-    FULL IMAGE
-  */
+  /* =========================
+     FULL MEDIA
+  ========================= */
 
   if(m.photo_url){
 
-    const img =
-      document.createElement("img");
+    const url =
+      String(m.photo_url);
 
-    img.className =
-      "modal-image";
 
-    img.src =
-      m.photo_url;
+    if(isVideoUrl(url)){
 
-    img.alt =
-      "Birthday photo";
+      /*
+        FULL VIDEO
+      */
 
-    /*
-      NEVER CROP THE ORIGINAL IMAGE
-    */
+      const video =
+        document.createElement("video");
 
-    img.style.objectFit =
-      "contain";
 
-    content.appendChild(img);
+      video.className =
+        "modal-video";
+
+
+      video.src =
+        url;
+
+
+      video.controls =
+        true;
+
+
+      video.playsInline =
+        true;
+
+
+      video.preload =
+        "metadata";
+
+
+      content.appendChild(video);
+
+
+    }else{
+
+      /*
+        FULL IMAGE
+        object-fit: contain
+        means NO CROPPING.
+      */
+
+      const img =
+        document.createElement("img");
+
+
+      img.className =
+        "modal-image";
+
+
+      img.src =
+        url;
+
+
+      img.alt =
+        "Birthday photo";
+
+
+      img.style.objectFit =
+        "contain";
+
+
+      content.appendChild(img);
+
+    }
 
   }
 
 
-  /*
-    EYEBROW
-  */
+  /* =========================
+     EYEBROW
+  ========================= */
 
   const eyebrow =
     document.createElement("div");
 
+
   eyebrow.className =
     "modal-eyebrow";
+
 
   eyebrow.textContent =
     "A birthday wish";
 
+
   content.appendChild(eyebrow);
 
 
-  /*
-    FULL MESSAGE
-  */
+  /* =========================
+     FULL MESSAGE
+  ========================= */
 
   const message =
     document.createElement("div");
 
+
   message.className =
     "modal-message";
+
 
   message.textContent =
     m.message || "";
 
+
   content.appendChild(message);
 
 
-  /*
-    NAME
-  */
+  /* =========================
+     SENDER
+  ========================= */
 
   const from =
     document.createElement("div");
 
+
   from.className =
     "modal-from";
 
+
   from.textContent =
-    "— " + (m.name || "Anonymous");
+    "— " +
+    (m.name || "Anonymous");
+
 
   content.appendChild(from);
 
 
-  /*
-    SHOW
-  */
+  /* =========================
+     SHOW MODAL
+  ========================= */
 
-  modal.classList.add("show");
+  modal.classList.add(
+    "show"
+  );
+
+
+  /*
+    Stop background scrolling.
+  */
 
   document.body.style.overflow =
     "hidden";
@@ -998,7 +1241,7 @@ function openMessage(m){
 
 
 /* =========================
-   CLOSE
+   CLOSE MODAL
 ========================= */
 
 function closeModal(){
@@ -1006,6 +1249,7 @@ function closeModal(){
   document
     .getElementById("viewModal")
     .classList.remove("show");
+
 
   document.body.style.overflow =
     "";
@@ -1023,8 +1267,6 @@ document
     "click",
     function(event){
 
-      event.preventDefault();
-
       event.stopPropagation();
 
       closeModal();
@@ -1034,7 +1276,7 @@ document
 
 
 /* =========================
-   CLICK OUTSIDE
+   CLICK OUTSIDE MODAL
 ========================= */
 
 document
@@ -1057,14 +1299,16 @@ document
 
 
 /* =========================
-   ESC
+   ESC KEY
 ========================= */
 
 document.addEventListener(
   "keydown",
   function(event){
 
-    if(event.key === "Escape"){
+    if(
+      event.key === "Escape"
+    ){
 
       closeModal();
 
@@ -1082,6 +1326,7 @@ function showError(text){
 
   const wall =
     document.getElementById("wall");
+
 
   wall.innerHTML =
     '<div class="error">' +
@@ -1108,12 +1353,15 @@ function escapeHtml(value){
 
 
 /* =========================
-   REALTIME
+   REALTIME UPDATES
 ========================= */
 
 function enableRealtime(){
 
-  if(!sb) return;
+  if(!sb){
+    return;
+  }
+
 
   sb
     .channel("messages-live")
@@ -1139,7 +1387,7 @@ function enableRealtime(){
 
 
 /* =========================
-   RUN
+   RUN SITE
 ========================= */
 
 if(
